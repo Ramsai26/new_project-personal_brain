@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Brain Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .search-container {
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .result-card {
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .summary-card {
+            border-left: 4px solid #28a745;
+            background-color: #e8f5e9;
+        }
+        .tag {
+            background-color: #e9ecef;
+            border-radius: 20px;
+            padding: 2px 10px;
+            margin-right: 5px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .status-online {
+            background-color: #28a745;
+        }
+        .status-offline {
+            background-color: #dc3545;
+        }
+        .tab-content {
+            padding: 20px 0;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-brain"></i> Personal Brain
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="processNotesBtn">
+                            <i class="bi bi-gear"></i> Process Notes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="statusLink">
+                            <span class="status-indicator" id="statusDot"></span> Status
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button" role="tab" aria-controls="search" aria-selected="true">Search</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="date-tab" data-bs-toggle="tab" data-bs-target="#date" type="button" role="tab" aria-controls="date" aria-selected="false">Daily Journals</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="enhance-tab" data-bs-toggle="tab" data-bs-target="#enhance" type="button" role="tab" aria-controls="enhance" aria-selected="false">Enhance Notes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab" aria-controls="stats" aria-selected="false">Stats</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- Search Tab -->
+            <div class="tab-pane fade show active" id="search" role="tabpanel" aria-labelledby="search-tab">
+                <div class="search-container">
+                    <h2 class="mb-4">Search Your Brain</h2>
+                    <div class="row">
+                        <div class="col-md-9">
+                            <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Ask your brain a question...">
+                        </div>
+                        <div class="col-md-3">
+                            <button id="searchBtn" class="btn btn-primary btn-lg w-100">Search</button>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <select id="collectionSelect" class="form-select">
+                            <option value="all">All Collections</option>
+                            <option value="notes">Notes Only</option>
+                            <option value="journals">Journals Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="searchSpinner" class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Searching your brain...</p>
+                </div>
+
+                <!-- Search Results -->
+                <div id="searchResults"></div>
+            </div>
+
+            <!-- Date Search Tab -->
+            <div class="tab-pane fade" id="date" role="tabpanel" aria-labelledby="date-tab">
+                <div class="search-container">
+                    <h2 class="mb-4">Search By Date</h2>
+                    <div class="row">
+                        <div class="col-md-9">
+                            <input type="date" id="dateInput" class="form-control form-control-lg">
+                        </div>
+                        <div class="col-md-3">
+                            <button id="dateSearchBtn" class="btn btn-primary btn-lg w-100">Search</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="dateSpinner" class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Searching journal entries...</p>
+                </div>
+
+                <!-- Date Search Results -->
+                <div id="dateResults"></div>
+            </div>
+
+            <!-- Enhance Tab -->
+            <div class="tab-pane fade" id="enhance" role="tabpanel" aria-labelledby="enhance-tab">
+                <div class="search-container">
+                    <h2 class="mb-4">Enhance Your Notes</h2>
+                    <div class="form-group mb-3">
+                        <label for="enhanceText">Paste your rough note:</label>
+                        <textarea id="enhanceText" class="form-control" rows="6"></textarea>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-9">
+                            <select id="enhanceTask" class="form-select">
+                                <option value="enhance">Enhance & Organize</option>
+                                <option value="summarize">Summarize</option>
+                                <option value="tag">Extract Tags</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button id="enhanceBtn" class="btn btn-primary w-100">Process</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="enhanceSpinner" class="loading-spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Enhancing your note...</p>
+                </div>
+
+                <!-- Enhanced Results -->
+                <div id="enhanceResults" class="mt-4"></div>
+            </div>
+
+            <!-- Stats Tab -->
+            <div class="tab-pane fade" id="stats" role="tabpanel" aria-labelledby="stats-tab">
+                <div class="search-container">
+                    <h2 class="mb-4">Brain Statistics</h2>
+                    <div id="statsContent">
+                        <p>Loading statistics...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="statusModalLabel">System Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="statusBody">
+                    <p>Loading status...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Process Notes Modal -->
+    <div class="modal fade" id="processModal" tabindex="-1" aria-labelledby="processModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="processModalLabel">Process Notes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>This will process all your Logseq notes, enhance them using the LLM, and index them for search. This may take some time depending on the number of notes.</p>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i> Make sure your Logseq path is correctly configured in the settings.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmProcessBtn" class="btn btn-primary">Process Notes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap and JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check status on page load
+            checkStatus();
+            loadStats();
+
+            // Event listeners
+            document.getElementById('statusLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                checkStatus(true);
+            });
+
+            document.getElementById('processNotesBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                const processModal = new bootstrap.Modal(document.getElementById('processModal'));
+                processModal.show();
+            });
+
+            document.getElementById('confirmProcessBtn').addEventListener('click', function() {
+                processNotes();
+            });
+
+            document.getElementById('searchBtn').addEventListener('click', function() {
+                searchBrain();
+            });
+
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchBrain();
+                }
+            });
+
+            document.getElementById('dateSearchBtn').addEventListener('click', function() {
+                searchByDate();
+            });
+
+            document.getElementById('enhanceBtn').addEventListener('click', function() {
+                enhanceNote();
+            });
+
+            // Functions
+            function checkStatus(showModal = false) {
+                fetch('/api/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        const statusDot = document.getElementById('statusDot');
+                        statusDot.className = 'status-indicator ' + (data.is_ready ? 'status-online' : 'status-offline');
+
+                        if (showModal) {
+                            const statusBody = document.getElementById('statusBody');
+                            let html = '<div class="d-flex align-items-center mb-3">';
+                            html += `<span class="status-indicator ${data.is_ready ? 'status-online' : 'status-offline'}"></span>`;
+                            html += `<h5 class="mb-0 ms-2">System is ${data.is_ready ? 'Ready' : 'Not Ready'}</h5>`;
+                            html += '</div>';
+                            
+                            html += '<h6>Components:</h6>';
+                            html += '<ul class="list-group">';
+                            html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Logseq Parser
+                                    <span class="badge ${data.components.parser ? 'bg-success' : 'bg-danger'} rounded-pill">
+                                        ${data.components.parser ? 'Online' : 'Offline'}
+                                    </span>
+                                </li>`;
+                            html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                    LLM (Ollama)
+                                    <span class="badge ${data.components.llm ? 'bg-success' : 'bg-danger'} rounded-pill">
+                                        ${data.components.llm ? 'Online' : 'Offline'}
+                                    </span>
+                                </li>`;
+                            html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Vector Database
+                                    <span class="badge ${data.components.vector_store ? 'bg-success' : 'bg-danger'} rounded-pill">
+                                        ${data.components.vector_store ? 'Online' : 'Offline'}
+                                    </span>
+                                </li>`;
+                            html += '</ul>';
+                            
+                            statusBody.innerHTML = html;
+                            
+                            const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+                            statusModal.show();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error checking status:', error);
+                        const statusDot = document.getElementById('statusDot');
+                        statusDot.className = 'status-indicator status-offline';
+                    });
+            }
+
+            function processNotes() {
+                const processModal = bootstrap.Modal.getInstance(document.getElementById('processModal'));
+                processModal.hide();
+                
+                fetch('/api/process', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Processing started! Check the stats tab for progress.');
+                    loadStats();
+                })
+                .catch(error => {
+                    console.error('Error processing notes:', error);
+                    alert('Error processing notes. Check console for details.');
+                });
+            }
+
+            function searchBrain() {
+                const query = document.getElementById('searchInput').value.trim();
+                const collection = document.getElementById('collectionSelect').value;
+                
+                if (!query) return;
+                
+                // Show loading spinner
+                document.getElementById('searchSpinner').style.display = 'block';
+                document.getElementById('searchResults').innerHTML = '';
+                
+                fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        collection: collection,
+                        limit: 10
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading spinner
+                    document.getElementById('searchSpinner').style.display = 'none';
+                    
+                    // Display results
+                    const resultsDiv = document.getElementById('searchResults');
+                    let html = '';
+                    
+                    if (data.length === 0) {
+                        html = '<div class="alert alert-info">No results found.</div>';
+                    } else {
+                        data.forEach((result, index) => {
+                            const isSummary = result.metadata && result.metadata.is_summary;
+                            
+                            html += `<div class="result-card ${isSummary ? 'summary-card' : ''}">`;
+                            
+                            if (isSummary) {
+                                html += '<h5><i class="bi bi-lightning"></i> AI Summary</h5>';
+                            } else {
+                                html += `<h5>${result.metadata.title || 'Untitled'}</h5>`;
+                            }
+                            
+                            if (result.metadata.journal_date) {
+                                html += `<div class="mb-2"><small class="text-muted">Journal Date: ${result.metadata.journal_date}</small></div>`;
+                            }
+                            
+                            html += `<div class="mb-3">${result.content}</div>`;
+                            
+                            if (result.metadata.tags && !isSummary) {
+                                const tags = result.metadata.tags.split(',').filter(tag => tag.trim());
+                                if (tags.length > 0) {
+                                    html += '<div class="mt-2">';
+                                    tags.forEach(tag => {
+                                        html += `<span class="tag">#${tag.trim()}</span>`;
+                                    });
+                                    html += '</div>';
+                                }
+                            }
+                            
+                            html += '</div>';
+                        });
+                    }
+                    
+                    resultsDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error searching:', error);
+                    document.getElementById('searchSpinner').style.display = 'none';
+                    document.getElementById('searchResults').innerHTML = '<div class="alert alert-danger">Error searching. Please try again.</div>';
+                });
+            }
+
+            function searchByDate() {
+                const dateStr = document.getElementById('dateInput').value;
+                
+                if (!dateStr) return;
+                
+                // Show loading spinner
+                document.getElementById('dateSpinner').style.display = 'block';
+                document.getElementById('dateResults').innerHTML = '';
+                
+                fetch('/api/search/date', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        date: dateStr,
+                        limit: 10
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading spinner
+                    document.getElementById('dateSpinner').style.display = 'none';
+                    
+                    // Display results
+                    const resultsDiv = document.getElementById('dateResults');
+                    let html = '';
+                    
+                    if (data.length === 0) {
+                        html = '<div class="alert alert-info">No journal entries found for this date.</div>';
+                    } else {
+                        data.forEach((result, index) => {
+                            const isSummary = result.metadata && result.metadata.is_summary;
+                            
+                            html += `<div class="result-card ${isSummary ? 'summary-card' : ''}">`;
+                            
+                            if (isSummary) {
+                                html += '<h5><i class="bi bi-lightning"></i> AI Summary</h5>';
+                            } else {
+                                html += `<h5>${result.metadata.title || 'Untitled'}</h5>`;
+                            }
+                            
+                            html += `<div class="mb-3">${result.content}</div>`;
+                            
+                            if (result.metadata.tags && !isSummary) {
+                                const tags = result.metadata.tags.split(',').filter(tag => tag.trim());
+                                if (tags.length > 0) {
+                                    html += '<div class="mt-2">';
+                                    tags.forEach(tag => {
+                                        html += `<span class="tag">#${tag.trim()}</span>`;
+                                    });
+                                    html += '</div>';
+                                }
+                            }
+                            
+                            html += '</div>';
+                        });
+                    }
+                    
+                    resultsDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error searching by date:', error);
+                    document.getElementById('dateSpinner').style.display = 'none';
+                    document.getElementById('dateResults').innerHTML = '<div class="alert alert-danger">Error searching. Please try again.</div>';
+                });
+            }
+
+            function enhanceNote() {
+                const content = document.getElementById('enhanceText').value.trim();
+                const task = document.getElementById('enhanceTask').value;
+                
+                if (!content) {
+                    document.getElementById('enhanceResults').innerHTML = 
+                        `<div class="alert alert-warning">Please enter some text to enhance.</div>`;
+                    return;
+                }
+                
+                // Show loading spinner
+                document.getElementById('enhanceSpinner').style.display = 'block';
+                document.getElementById('enhanceResults').innerHTML = '';
+                
+                fetch('/api/enhance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        content: content,
+                        task: task
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading spinner
+                    document.getElementById('enhanceSpinner').style.display = 'none';
+                    
+                    if (data.error) {
+                        document.getElementById('enhanceResults').innerHTML = 
+                            `<div class="alert alert-danger">${data.error}</div>`;
+                        return;
+                    }
+                    
+                    // Check if we have a response
+                    if (!data.response) {
+                        document.getElementById('enhanceResults').innerHTML = 
+                            `<div class="alert alert-warning">No response received from the AI model. Please try again.</div>`;
+                        return;
+                    }
+                    
+                    // Display results
+                    let result = data.response || '';
+                    
+                    if (task === 'tag') {
+                        // If it's a tag task, format as tags
+                        const tags = result.split(',').map(tag => tag.trim()).filter(tag => tag);
+                        let html = '<div class="card"><div class="card-body">';
+                        html += '<h5 class="card-title">Extracted Tags</h5>';
+                        html += '<div class="mt-3">';
+                        tags.forEach(tag => {
+                            html += `<span class="tag">#${tag}</span>`;
+                        });
+                        html += '</div></div></div>';
+                        document.getElementById('enhanceResults').innerHTML = html;
+                    } else {
+                        // For other tasks, display as formatted text
+                        document.getElementById('enhanceResults').innerHTML = 
+                            `<div class="card"><div class="card-body"><pre>${result}</pre></div></div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error enhancing note:', error);
+                    document.getElementById('enhanceSpinner').style.display = 'none';
+                    document.getElementById('enhanceResults').innerHTML = 
+                        `<div class="alert alert-danger">Error enhancing note: ${error.message || 'Unknown error'}. Please check if Ollama is running and try again.</div>`;
+                });
+            }
+
+            function loadStats() {
+                fetch('/api/notes/stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        const statsDiv = document.getElementById('statsContent');
+                        
+                        if (data.message) {
+                            statsDiv.innerHTML = `<div class="alert alert-info">${data.message}</div>`;
+                            return;
+                        }
+                        
+                        let html = `
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h1>${data.pages_processed || 0}</h1>
+                                            <p class="text-muted">Pages Processed</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h1>${data.journals_processed || 0}</h1>
+                                            <p class="text-muted">Journal Entries</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h1>${data.enhanced_count || 0}</h1>
+                                            <p class="text-muted">Enhanced Notes</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-4">
+                                <div class="card-header">
+                                    Processing Details
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <strong>Status:</strong> 
+                                        <span class="badge ${data.status === 'completed' ? 'bg-success' : 
+                                                            data.status === 'failed' ? 'bg-danger' : 
+                                                            'bg-warning'}">${data.status || 'Unknown'}</span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Start Time:</strong> ${data.start_time ? new Date(data.start_time).toLocaleString() : 'N/A'}
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>End Time:</strong> ${data.end_time ? new Date(data.end_time).toLocaleString() : 'N/A'}
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Duration:</strong> ${data.duration_seconds ? Math.round(data.duration_seconds) + ' seconds' : 'N/A'}
+                                    </div>
+                                    <div class="mb-3">
+                                        <strong>Errors:</strong> ${data.errors || 0}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        statsDiv.innerHTML = html;
+                    })
+                    .catch(error => {
+                        console.error('Error loading stats:', error);
+                        document.getElementById('statsContent').innerHTML = '<div class="alert alert-danger">Error loading statistics. Please try again.</div>';
+                    });
+            }
+        });
+    </script>
+</body>
+</html> 
