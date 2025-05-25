@@ -1,4 +1,5 @@
 import os
+import secrets # For generating a default key
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -19,7 +20,7 @@ DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "mistral:latest")
 
 # Database configuration
 VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "./data/vectordb")
-SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", "./data/app.db")
+SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", "./data/app_main.db") # Changed default path
 
 # Model cache configuration
 SENTENCE_TRANSFORMERS_HOME = os.getenv("SENTENCE_TRANSFORMERS_HOME", os.path.join(CACHE_DIR, "sentence_transformers"))
@@ -29,6 +30,10 @@ TORCH_HOME = os.getenv("TORCH_HOME", os.path.join(CACHE_DIR, "torch"))
 # App configuration
 FLASK_PORT = int(os.getenv("FLASK_PORT", 5000))
 STREAMLIT_PORT = int(os.getenv("STREAMLIT_PORT", 8501))
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY:
+    print("WARNING: JWT_SECRET_KEY not set in environment. Using a default, insecure key for development only.")
+    JWT_SECRET_KEY = secrets.token_urlsafe(32) # Generate a 32-byte URL-safe token
 
 # Create necessary directories
 def create_directories():

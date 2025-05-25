@@ -1,6 +1,5 @@
 import sys
 import os
-import json
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
@@ -15,7 +14,7 @@ from sqlalchemy import or_, and_, exc as sqlalchemy_exc
 from datetime import datetime
 
 from brain_processor import BrainProcessor
-from config import FLASK_PORT, LOGSEQ_NOTES_DIR, VECTOR_DB_PATH, DEFAULT_MODEL, create_directories
+from config import FLASK_PORT, LOGSEQ_NOTES_DIR, VECTOR_DB_PATH, DEFAULT_MODEL, create_directories, JWT_SECRET_KEY
 from src.db.database import init_db, get_db
 from src.db.models import User, Reminder, Friendship, SharedReminder, FriendSpace, FriendSpaceMember, Task, Tag, TaskTag, TaskAssignment
 from src.auth import hash_password, verify_password
@@ -33,7 +32,7 @@ app = Flask(__name__,
 CORS(app)  # Enable CORS for all routes
 
 # Configure Flask-JWT-Extended
-app.config["JWT_SECRET_KEY"] = "your-super-secret-key"  # Change this in production!
+app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
 jwt = JWTManager(app)
 
 # Initialize the brain processor
@@ -299,7 +298,7 @@ def respond_to_friend_request(request_id):
         if action == "accept":
             friend_request.status = "accepted"
         elif action == "reject":
-            friend_request.status = "rejected" # Or db.delete(friend_request)
+            friend_request.status = "rejected"
 
         friend_request.updated_at = datetime.utcnow()
         db.commit()
@@ -366,9 +365,9 @@ def list_friends():
         friends = []
         for friendship in accepted_friendships:
             if friendship.requester_id == current_user_id:
-                friend_user = friendship.receiver # db.query(User).get(friendship.receiver_id)
+                friend_user = friendship.receiver
             else:
-                friend_user = friendship.requester # db.query(User).get(friendship.requester_id)
+                friend_user = friendship.requester
             
             if friend_user: # Should always be true due to FK constraints if db is consistent
                 friends.append({
@@ -403,12 +402,9 @@ def remove_friend(friendship_id):
             return jsonify(message="Friendship not found or you are not part of it"), 404
 
         if friendship.status != "accepted":
-             # Or allow cancelling pending requests with this endpoint too
             return jsonify(message="This is not an active friendship. Cannot remove."), 400
 
         db.delete(friendship)
-        # Optionally, can change status to "removed" or "blocked" instead of hard delete
-        # friendship.status = "removed_by_" + str(current_user_id)
         db.commit()
         return jsonify(message="Friend removed successfully"), 200
     except Exception as e:
@@ -553,14 +549,10 @@ def revoke_shared_reminder(share_id):
             return jsonify(message="Shared reminder entry not found"), 404
 
         # Check if current user is the one who shared it OR the one it was shared with (allowing receiver to "unfollow")
-        # For strict "owner can revoke", use: shared_reminder_entry.shared_by_user_id == current_user_id
         if shared_reminder_entry.shared_by_user_id != current_user_id and shared_reminder_entry.shared_with_user_id != current_user_id:
              return jsonify(message="You do not have permission to revoke this share"), 403
 
         db.delete(shared_reminder_entry)
-        # Or, to keep a record:
-        # shared_reminder_entry.status = "revoked"
-        # shared_reminder_entry.updated_at = datetime.utcnow() # if you add an updated_at field
         db.commit()
         return jsonify(message="Reminder share revoked successfully"), 200
     except Exception as e:
