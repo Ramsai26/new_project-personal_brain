@@ -20,7 +20,7 @@ A second brain application that processes and enhances your Logseq notes using l
 
 1. Clone this repository:
 ```
-git clone https://github.com/yourusername/personal-brain.git
+git clone https://github.com/Ramsai26/new_project-personal_brain.git
 cd personal-brain
 ```
 
