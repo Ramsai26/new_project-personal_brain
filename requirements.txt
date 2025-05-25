@@ -16,3 +16,5 @@ tqdm
 flask-cors
 frontmatter
 beautifulsoup4
+Flask-JWT-Extended
+bcrypt

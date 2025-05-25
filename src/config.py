@@ -19,6 +19,7 @@ DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "mistral:latest")
 
 # Database configuration
 VECTOR_DB_PATH = os.getenv("VECTOR_DB_PATH", "./data/vectordb")
+SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", "./data/app.db")
 
 # Model cache configuration
 SENTENCE_TRANSFORMERS_HOME = os.getenv("SENTENCE_TRANSFORMERS_HOME", os.path.join(CACHE_DIR, "sentence_transformers"))
@@ -32,7 +33,9 @@ STREAMLIT_PORT = int(os.getenv("STREAMLIT_PORT", 8501))
 # Create necessary directories
 def create_directories():
     # Create data directories
+    Path(VECTOR_DB_PATH).parent.mkdir(parents=True, exist_ok=True) # Ensure ./data exists
     Path(VECTOR_DB_PATH).mkdir(parents=True, exist_ok=True)
+    Path(SQLITE_DB_PATH).parent.mkdir(parents=True, exist_ok=True) # Ensure ./data exists
     Path("./data/processed").mkdir(parents=True, exist_ok=True)
     Path("./logs").mkdir(parents=True, exist_ok=True)
     
